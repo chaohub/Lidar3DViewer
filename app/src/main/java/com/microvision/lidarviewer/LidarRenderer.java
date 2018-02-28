@@ -52,8 +52,7 @@ public class LidarRenderer implements GLSurfaceView.Renderer {
     }
 
     public void onDrawFrame(GL10 unused) {
-        float[] scratch = new float[16];
-        float[] scratch2 = new float[16];
+        float[] finalMatrix = new float[16];
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
@@ -65,18 +64,17 @@ public class LidarRenderer implements GLSurfaceView.Renderer {
         Matrix.multiplyMM(mVPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
 
         // Create a rotation transformation for the triangle
-        long time = SystemClock.uptimeMillis() % 4000L;
-        float angle = 0; //0.090f * ((int) time);
+        float angle = 0;
         Matrix.setRotateM(rotationMatrix, 0, -angle, 0, 0, -1.0f);
 
         // Combine the rotation matrix with the projection and camera view
         // Note that the mVPMatrix factor *must be first* in order
         // for the matrix multiplication product to be correct.
-        Matrix.multiplyMM(scratch2, 0, mVPMatrix, 0, rotationMatrix, 0);
+        Matrix.multiplyMM(finalMatrix, 0, mVPMatrix, 0, rotationMatrix, 0);
 
         // Draw triangle
         if (mesh != null) {
-            mesh.draw(scratch2);
+            mesh.draw(finalMatrix);
         }
         fpsCounter();
     }

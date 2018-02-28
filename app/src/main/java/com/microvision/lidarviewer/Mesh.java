@@ -51,15 +51,15 @@ public class Mesh {
     static final float START_X = -FOV_W /2;
     static final float START_Y = -FOV_H/2; //0.18031f;
     static final float PD_OFFSET_LEFT = -0.03f;
-    static final float TOF_UNIT = 0.001f;   // 1 depth unit represent 1mm
-    private static final short TOF_OFFSET = 0x0;
-    static float scaleMap[];
+    static final float DEPTH_UNIT = 0.001f;   // 1 depth unit represent 1mm
+    private static final short DEPTH_OFFSET = 0x0;
+    static float scaleTable[];
     static short depthImage[];
     int grow = 500;
     int step = 10;
     private static int MAX_CALI_SAMPLES = 100;
     private int calibrated_samples = 0;
-    private int tof[];
+    private int depth[];
     private final float AMP_FACTOR = 1.0f/4096;
 
     /**
@@ -68,10 +68,10 @@ public class Mesh {
     public Mesh(int width, int height) {
         this.width = width;
         this.height = height;
-        scaleMap = new float[width * height * 3];
+        scaleTable = new float[width * height * 3];
         depthImage = new short[width * height * 4];
         meshCoords = new float[width * height * 7];
-        tof = new int[width * height];
+        depth = new int[width * height];
 
         genTriangles();
         initScaleMap();
@@ -172,17 +172,17 @@ public class Mesh {
                 /* ideal scalemap */
                 if (calibrated_samples < MAX_CALI_SAMPLES) {
                     dist = Math.sqrt(x * x + y * y + z * z) + Math.sqrt((x - PD_OFFSET_LEFT) * (x - PD_OFFSET_LEFT) + y * y + z * z);
-                    scaleMap[id++] = (float) (TOF_UNIT * x / dist);
-                    scaleMap[id++] = (float) (TOF_UNIT * y / dist);
-                    scaleMap[id++] = (float) (TOF_UNIT * z / dist);
+                    scaleTable[id++] = (float) (DEPTH_UNIT * x / dist);
+                    scaleTable[id++] = (float) (DEPTH_UNIT * y / dist);
+                    scaleTable[id++] = (float) (DEPTH_UNIT * z / dist);
                 }
                 else {
                     /* calibrated scalemap */
-                    tof[id/3] = tof[id/3] / MAX_CALI_SAMPLES;
-                    int diff = tof[id/3] - TOF_OFFSET;
-                    scaleMap[id++] = (float)(x/diff);
-                    scaleMap[id++] = (float)(y/diff);
-                    scaleMap[id++] = (float)(z/diff);
+                    depth[id/3] = depth[id/3] / MAX_CALI_SAMPLES;
+                    int diff = depth[id/3] - DEPTH_OFFSET;
+                    scaleTable[id++] = (float)(x/diff);
+                    scaleTable[id++] = (float)(y/diff);
+                    scaleTable[id++] = (float)(z/diff);
                 }
             }
         }
@@ -204,7 +204,8 @@ public class Mesh {
         if (grow > 1500) step = -10;
         else if (grow < 500) step = 10;
 
-        tof2Xyz(ShortBuffer.wrap(depthImage));
+
+            depth2xyz(ShortBuffer.wrap(depthImage));
     }
 
     /**
@@ -232,20 +233,20 @@ public class Mesh {
      * @param buf - The short buffer containing lidar data
      * 4 Bytes per pixel for two camera channel, 2 bytes for depth, 2 bytes for amplitude
      */
-    public void tof2Xyz(ShortBuffer buf) {
+    public void depth2xyz(ShortBuffer buf) {
         int idc = 0;
         int idd = 0;
         int idm = 0;
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                short diff = (short)(buf.get(idd++) - TOF_OFFSET);
+                short diff = (short)(buf.get(idd++) - DEPTH_OFFSET);
                 if (diff < 100) {
-                    diff = (short)(tof[idc/3]);
+                    diff = (short)(depth[idc/3]);
                 }
 
-                meshCoords[idm++] = scaleMap[idc++] * diff * 4;     //x
-                meshCoords[idm++] = scaleMap[idc++] * diff * 4;     //y
-                meshCoords[idm++] = scaleMap[idc++] * diff * 4;     //z
+                meshCoords[idm++] = scaleTable[idc++] * diff * 4;     //x
+                meshCoords[idm++] = scaleTable[idc++] * diff * 4;     //y
+                meshCoords[idm++] = scaleTable[idc++] * diff * 4;     //z
                 short amp = buf.get(idd++);
                 meshCoords[idm++] = amp * AMP_FACTOR;       // R
                 meshCoords[idm++] = amp * AMP_FACTOR;       // G
@@ -263,20 +264,20 @@ public class Mesh {
      */
     public void cameraFrame(ShortBuffer buf) {
         if (calibrate(buf)) {
-            tof2Xyz(buf);
+            depth2xyz(buf);
         }
     }
 
     private boolean calibrate(ShortBuffer buf) {
         if (calibrated_samples < MAX_CALI_SAMPLES) {
             // Accumulate samples
-            int len = tof.length;
+            int len = depth.length;
             for (int i = 0; i < len; i++) {
-                tof[i] += buf.get(i*2);
+                depth[i] += buf.get(i*2);
             }
 
             calibrated_samples++;
-            // Set the calibration matrix based on acumulated tof values
+            // Set the calibration matrix based on acumulated depth values
             if (calibrated_samples == MAX_CALI_SAMPLES) {
                 // Set calibration matrix
                 initScaleMap();
