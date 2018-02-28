@@ -6,8 +6,8 @@ import android.view.SurfaceHolder;
 
 public class LidarViewerActivity extends AppCompatActivity {
 
-    private LidarSurfaceView mGLView;
-    private LidarCameraPreview camPreview;
+    private LidarSurfaceView lidarSurfaceView;
+    private LidarCameraPreview lidarCameraPreview;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -15,12 +15,12 @@ public class LidarViewerActivity extends AppCompatActivity {
 
         // Create a GLSurfaceView instance and set it
         // as the ContentView for this Activity.
-        mGLView = new LidarSurfaceView(this);
-        SurfaceHolder camHolder = mGLView.getHolder();
-        camPreview = new LidarCameraPreview(mGLView);
-        camHolder.addCallback(camPreview);
+        lidarSurfaceView = new LidarSurfaceView(this);
+        SurfaceHolder camHolder = lidarSurfaceView.getHolder();
+        lidarCameraPreview = new LidarCameraPreview(lidarSurfaceView);
+        camHolder.addCallback(lidarCameraPreview);
         camHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
-        setContentView(mGLView);
+        setContentView(lidarSurfaceView);
     }
 }

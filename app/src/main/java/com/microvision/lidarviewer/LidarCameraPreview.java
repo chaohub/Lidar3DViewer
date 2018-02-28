@@ -5,7 +5,6 @@ import android.hardware.Camera;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.SurfaceHolder;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
@@ -17,20 +16,19 @@ import java.util.List;
 
 public class LidarCameraPreview implements SurfaceHolder.Callback, Camera.PreviewCallback
 {
-    private Camera mCamera = null;
+    private Camera lidar = null;
     private ShortBuffer frameData = null;
     private int imageFormat;
     private int PreviewSizeWidth;
     private int PreviewSizeHeight;
     private boolean bProcessing = false;
-    private Mesh mMesh = null;
-    private LidarSurfaceView mGLSurfaceView;
-
-    Handler mHandler = new Handler(Looper.getMainLooper());
+    private Mesh mesh = null;
+    private LidarSurfaceView lidarSurfaceView;
+    private Handler handler = new Handler(Looper.getMainLooper());
 
     public LidarCameraPreview(LidarSurfaceView glSurfaceView)
     {
-        mGLSurfaceView = glSurfaceView;
+        lidarSurfaceView = glSurfaceView;
     }
 
     @Override
@@ -40,19 +38,19 @@ public class LidarCameraPreview implements SurfaceHolder.Callback, Camera.Previe
         if ( !bProcessing )
         {
             frameData = ByteBuffer.wrap(arg0).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer();
-            mHandler.post(DoImageProcessing);
+            handler.post(DoImageProcessing);
         }
     }
 
     public void onPause()
     {
-        mCamera.stopPreview();
+        lidar.stopPreview();
     }
 
     @Override
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3)
     {
-        Camera.Parameters parameters=mCamera.getParameters();
+        Camera.Parameters parameters= lidar.getParameters();
         List<Camera.Size> sizes= parameters.getSupportedPreviewSizes();
         PreviewSizeWidth = sizes.get(0).width;
         PreviewSizeHeight =  sizes.get(0).height;
@@ -61,38 +59,38 @@ public class LidarCameraPreview implements SurfaceHolder.Callback, Camera.Previe
 
         parameters.setPreviewSize(PreviewSizeWidth, PreviewSizeHeight);
         parameters.setPreviewFormat(imageFormat);
-        mCamera.setParameters(parameters);
-        mCamera.startPreview();
+        lidar.setParameters(parameters);
+        lidar.startPreview();
 
-        mMesh = mGLSurfaceView.getMesh();
+        mesh = lidarSurfaceView.getMesh();
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder arg0)
     {
-        mCamera = Camera.open();
+        lidar = Camera.open();
         // some platform will show black screen without the following code
         /*try
         {
             // If did not set the SurfaceHolder, the preview area will be black.
-            mCamera.setPreviewDisplay(arg0);
+            lidar.setPreviewDisplay(arg0);
         }
         catch (IOException e)
         {
-            mCamera.release();
-            mCamera = null;
+            lidar.release();
+            lidar = null;
         }
         */
-        mCamera.setPreviewCallback(this);
+        lidar.setPreviewCallback(this);
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder arg0)
     {
-        mCamera.setPreviewCallback(null);
-        mCamera.stopPreview();
-        mCamera.release();
-        mCamera = null;
+        lidar.setPreviewCallback(null);
+        lidar.stopPreview();
+        lidar.release();
+        lidar = null;
     }
 
     private Runnable DoImageProcessing = new Runnable()
@@ -101,11 +99,11 @@ public class LidarCameraPreview implements SurfaceHolder.Callback, Camera.Previe
         {
             bProcessing = true;
 
-            if (mMesh == null) {
-                mMesh = mGLSurfaceView.getMesh();
+            if (mesh == null) {
+                mesh = lidarSurfaceView.getMesh();
             }
             else {
-                mMesh.cameraFrame(frameData);
+                mesh.cameraFrame(frameData);
             }
             bProcessing = false;
         }

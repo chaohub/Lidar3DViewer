@@ -10,17 +10,17 @@ import android.view.MotionEvent;
 
 class LidarSurfaceView extends GLSurfaceView {
 
-    private final LidarRenderer mRenderer;
+    private final LidarRenderer lidarRenderer;
 
     public LidarSurfaceView(Context context){
         super(context);
 
         // Create an OpenGL ES 2.0 context
         setEGLContextClientVersion(2);
-        mRenderer = new LidarRenderer();
+        lidarRenderer = new LidarRenderer();
 
         // Set the Renderer for drawing on the GLSurfaceView
-        setRenderer(mRenderer);
+        setRenderer(lidarRenderer);
     }
 
     @Override
@@ -32,13 +32,13 @@ class LidarSurfaceView extends GLSurfaceView {
             case MotionEvent.ACTION_MOVE:
                 float x1 = (x/getWidth() - 0.5f) * 8;
                 float y1 = (y/getHeight() - 0.5f) * 8;
-                mRenderer.setCameraAngle(x1, y1);
+                lidarRenderer.setCameraAngle(x1, y1);
                 requestRender();
         }
         return true;
     }
 
     public Mesh getMesh() {
-        return mRenderer.getMesh();
+        return lidarRenderer.getMesh();
     }
 }

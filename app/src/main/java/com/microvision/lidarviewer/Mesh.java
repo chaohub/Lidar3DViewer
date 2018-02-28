@@ -1,7 +1,6 @@
 package com.microvision.lidarviewer;
 
 import android.opengl.GLES20;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -36,10 +35,10 @@ public class Mesh {
                     "}";
     private final FloatBuffer vertexBuffer;
     private final ShortBuffer drawListBuffer;
-    private final int mProgram;
-    private int mPositionHandle;
-    private int mColorHandle;
-    private int mMVPMatrixHandle;
+    private final int program;
+    private int positionHandle;
+    private int colorHandle;
+    private int mVPMatrixHandle;
     // number of coordinates per vertex in this array
     static final int COORDS_PER_VERTEX = 3;
     static float meshCoords[];
@@ -101,10 +100,10 @@ public class Mesh {
         int fragmentShader = LidarRenderer.loadShader(
                 GLES20.GL_FRAGMENT_SHADER,
                 fragmentShaderCode);
-        mProgram = GLES20.glCreateProgram();             // create empty OpenGL Program
-        GLES20.glAttachShader(mProgram, vertexShader);   // add the vertex shader to program
-        GLES20.glAttachShader(mProgram, fragmentShader); // add the fragment shader to program
-        GLES20.glLinkProgram(mProgram);                  // create OpenGL program executables
+        program = GLES20.glCreateProgram();             // create empty OpenGL Program
+        GLES20.glAttachShader(program, vertexShader);   // add the vertex shader to program
+        GLES20.glAttachShader(program, fragmentShader); // add the fragment shader to program
+        GLES20.glLinkProgram(program);                  // create OpenGL program executables
     }
 
     /**
@@ -119,40 +118,40 @@ public class Mesh {
         vertexBuffer.put(meshCoords);
 
         // Add program to OpenGL environment
-        GLES20.glUseProgram(mProgram);
+        GLES20.glUseProgram(program);
         // get handle to vertex shader's vPosition member
-        mPositionHandle = GLES20.glGetAttribLocation(mProgram, "vPosition");
+        positionHandle = GLES20.glGetAttribLocation(program, "vPosition");
         // Enable a handle to the triangle vertices
-        GLES20.glEnableVertexAttribArray(mPositionHandle);
+        GLES20.glEnableVertexAttribArray(positionHandle);
         vertexBuffer.position(0);
         // Prepare the triangle coordinate data
         GLES20.glVertexAttribPointer(
-                mPositionHandle, COORDS_PER_VERTEX,
+                positionHandle, COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
                 vertexStride, vertexBuffer);
 
         // get handle to fragment shader's vColor member
-        mColorHandle = GLES20.glGetAttribLocation(mProgram, "a_Color");
-        GLES20.glEnableVertexAttribArray(mColorHandle);
+        colorHandle = GLES20.glGetAttribLocation(program, "a_Color");
+        GLES20.glEnableVertexAttribArray(colorHandle);
         vertexBuffer.position(3);
         // Prepare the vertex color data
         GLES20.glVertexAttribPointer(
-                mColorHandle, 4,
+                colorHandle, 4,
                 GLES20.GL_FLOAT, false,
                 vertexStride, vertexBuffer);
 
         // get handle to shape's transformation matrix
-        mMVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "uMVPMatrix");
+        mVPMatrixHandle = GLES20.glGetUniformLocation(program, "uMVPMatrix");
         //LidarRenderer.checkGlError("glGetUniformLocation");
         // Apply the projection and view transformation
-        GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
+        GLES20.glUniformMatrix4fv(mVPMatrixHandle, 1, false, mvpMatrix, 0);
         //LidarRenderer.checkGlError("glUniformMatrix4fv");
         // Draw triangles
         //GLES20.glDrawElements(GLES20.GL_TRIANGLES, drawOrder.length, GLES20.GL_UNSIGNED_SHORT, drawListBuffer);
         GLES20.glDrawArrays(GLES20.GL_POINTS, 0, width*height);
         // Disable vertex array
-        GLES20.glDisableVertexAttribArray(mPositionHandle);
-        GLES20.glDisableVertexAttribArray(mColorHandle);
+        GLES20.glDisableVertexAttribArray(positionHandle);
+        GLES20.glDisableVertexAttribArray(colorHandle);
     }
 
     /**
