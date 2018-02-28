@@ -74,7 +74,7 @@ public class Mesh {
         depth = new int[width * height];
 
         genTriangles();
-        initScaleMap();
+        initScaleTable();
 
         // initialize vertex byte buffer for shape coordinates
         ByteBuffer bb = ByteBuffer.allocateDirect(
@@ -157,7 +157,7 @@ public class Mesh {
     /**
      * Initialize the scaling factor for every pixel. The scaling factor will be used to adjust incoming lidar depth data.
      */
-    public void initScaleMap() {
+    public void initScaleTable() {
         double step_x = FOV_W /(width-1);
         double step_y = FOV_H /(height-1);
         double x, y;
@@ -169,7 +169,7 @@ public class Mesh {
             for (int j = 0; j < width; j++) {
                 x = START_X + step_x*j;
                 y = START_Y + step_y*i;
-                /* ideal scalemap */
+                /* ideal scaleTable */
                 if (calibrated_samples < MAX_CALI_SAMPLES) {
                     dist = Math.sqrt(x * x + y * y + z * z) + Math.sqrt((x - PD_OFFSET_LEFT) * (x - PD_OFFSET_LEFT) + y * y + z * z);
                     scaleTable[id++] = (float) (DEPTH_UNIT * x / dist);
@@ -177,7 +177,7 @@ public class Mesh {
                     scaleTable[id++] = (float) (DEPTH_UNIT * z / dist);
                 }
                 else {
-                    /* calibrated scalemap */
+                    /* calibrated scaleTable */
                     depth[id/3] = depth[id/3] / MAX_CALI_SAMPLES;
                     int diff = depth[id/3] - DEPTH_OFFSET;
                     scaleTable[id++] = (float)(x/diff);
@@ -280,7 +280,7 @@ public class Mesh {
             // Set the calibration matrix based on acumulated depth values
             if (calibrated_samples == MAX_CALI_SAMPLES) {
                 // Set calibration matrix
-                initScaleMap();
+                initScaleTable();
             }
             return false;
         }
