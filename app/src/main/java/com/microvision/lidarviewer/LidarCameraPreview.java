@@ -1,9 +1,26 @@
+/*
+ * Copyright 2018 MicroVision, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.microvision.lidarviewer;
 
 import android.graphics.ImageFormat;
 import android.hardware.Camera;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -11,7 +28,7 @@ import java.nio.ShortBuffer;
 import java.util.List;
 
 /**
- * Created by Chao Chen on 12/11/17.
+ * Created by Chao Chen on 11/22/17.
  */
 
 public class LidarCameraPreview implements SurfaceHolder.Callback, Camera.PreviewCallback
@@ -50,6 +67,9 @@ public class LidarCameraPreview implements SurfaceHolder.Callback, Camera.Previe
     @Override
     public void surfaceChanged(SurfaceHolder arg0, int arg1, int arg2, int arg3)
     {
+        if (lidar == null) {
+            return;
+        }
         Camera.Parameters parameters= lidar.getParameters();
         List<Camera.Size> sizes= parameters.getSupportedPreviewSizes();
         PreviewSizeWidth = sizes.get(0).width;
@@ -68,25 +88,36 @@ public class LidarCameraPreview implements SurfaceHolder.Callback, Camera.Previe
     @Override
     public void surfaceCreated(SurfaceHolder arg0)
     {
-        lidar = Camera.open();
-        // some platform will show black screen without the following code
-        /*try
-        {
-            // If did not set the SurfaceHolder, the preview area will be black.
-            lidar.setPreviewDisplay(arg0);
+        try {
+            lidar = Camera.open();
+
+            if (lidar != null) {
+                // some platform will show black screen without the following code
+                /*try
+                {
+                    // If did not set the SurfaceHolder, the preview area will be black.
+                    lidar.setPreviewDisplay(arg0);
+                }
+                catch (IOException e)
+                {
+                    lidar.release();
+                    lidar = null;
+                }
+                */
+                lidar.setPreviewCallback(this);
+            }
         }
-        catch (IOException e)
-        {
-            lidar.release();
-            lidar = null;
+        catch (Exception ex) {
+            Log.i("LidarCameraPreview", ex.toString());
         }
-        */
-        lidar.setPreviewCallback(this);
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder arg0)
     {
+        if (lidar == null) {
+            return;
+        }
         lidar.setPreviewCallback(null);
         lidar.stopPreview();
         lidar.release();
