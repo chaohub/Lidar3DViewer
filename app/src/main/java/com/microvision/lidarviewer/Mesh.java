@@ -66,9 +66,9 @@ public class Mesh {
     static final float FOV_H = 0.20764f;
     static final float START_X = -FOV_W /2;
     static final float START_Y = -FOV_H/2; //0.18031f;
-    static final float PD_OFFSET_LEFT = -0.03f;
-    static final float DEPTH_UNIT = 0.001f;   // 1 depth unit represent 1mm
-    private static final short DEPTH_OFFSET = 0x0;
+    static final float PD_OFFSET_LEFT = 0.0f;
+    static final float DEPTH_UNIT = 0.01f;   // 1 depth unit represent 1mm
+    private static final short DEPTH_OFFSET = 0x0000;
     static float scaleTable[];
     static short depthImage[];
     int grow = 500;
@@ -262,7 +262,7 @@ public class Mesh {
 
                 meshCoords[idm++] = scaleTable[idc++] * diff * 4;     //x
                 meshCoords[idm++] = scaleTable[idc++] * diff * 4;     //y
-                meshCoords[idm++] = scaleTable[idc++] * diff * 4;     //z
+                meshCoords[idm++] = scaleTable[idc++] * diff * 8;     //z
                 short amp = buf.get(idd++);
                 meshCoords[idm++] = amp * AMP_FACTOR;       // R
                 meshCoords[idm++] = amp * AMP_FACTOR;       // G

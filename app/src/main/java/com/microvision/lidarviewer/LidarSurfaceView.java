@@ -46,8 +46,8 @@ class LidarSurfaceView extends GLSurfaceView {
 
         switch (e.getAction()) {
             case MotionEvent.ACTION_MOVE:
-                float x1 = (x/getWidth() - 0.5f) * 8;
-                float y1 = (y/getHeight() - 0.5f) * 8;
+                float x1 = (x/getWidth() - 0.5f) * 16;
+                float y1 = (y/getHeight() - 0.5f) * 16;
                 lidarRenderer.setCameraAngle(x1, y1);
                 requestRender();
         }

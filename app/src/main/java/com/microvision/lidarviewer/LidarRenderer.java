@@ -34,8 +34,8 @@ public class LidarRenderer implements GLSurfaceView.Renderer {
     private Mesh mesh = null;
     private float x;
     private float y;
-    private float z = 4.0f;
-    private float d = 4.0f;
+    private float z = 8.0f;
+    private float d = 8.0f;
     // mVPMatrix is an abbreviation for "Model View Projection Matrix"
     private final float[] mVPMatrix = new float[16];
     private final float[] projectionMatrix = new float[16];
@@ -61,10 +61,11 @@ public class LidarRenderer implements GLSurfaceView.Renderer {
     @Override
     public void onSurfaceChanged(GL10 unused, int width, int height) {
         GLES20.glViewport(0, 0, width, height);
-        float ratio = 0.35f / 0.20f;
+        float scale = 0.25f;
+        float ratio = 0.35f / 0.20f *scale;
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
-        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -1, 1, 2.4f, 7);
+        Matrix.frustumM(projectionMatrix, 0, -ratio, ratio, -scale, scale, 2.0f, 10.0f);
     }
 
     public void onDrawFrame(GL10 unused) {
@@ -72,9 +73,8 @@ public class LidarRenderer implements GLSurfaceView.Renderer {
         // Redraw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
-        Matrix.setRotateM(rotationMatrix, 0, angle, 0, 0, -1.0f);
         // Set the camera position (View matrix)
-        Matrix.setLookAtM(viewMatrix, 0, x, y, -z, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(viewMatrix, 0, x, y, -z, 0f, 0f, -1.8f, 0f, 1.0f, 0f);
 
         // Calculate the projection and view transformation
         Matrix.multiplyMM(mVPMatrix, 0, projectionMatrix, 0, viewMatrix, 0);
@@ -122,8 +122,8 @@ public class LidarRenderer implements GLSurfaceView.Renderer {
     }
 
     public void setCameraAngle(float x, float y) {
-        this.x = x - 0.5f;
-        this.y = y - 0.5f;
+        this.x = x;
+        this.y = y;
         this.z = (float)Math.sqrt(d*d - x*x -y*y);
     }
 
